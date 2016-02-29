@@ -90,8 +90,7 @@ This call is unrestricted. Everyone can submit an application to it. The applica
 > comm.request.sendTransaction("0xe6b032b23bc145ed19e23792e2a107d0794fe65a","http://some.url/application.json","0x123567",{from:eth.accounts[0], gas: 150000});
 "0x669b8c0dba902e7a727749278acc3e2c9c44b02af72885385745e26febd9188f"
 ```
-
-After an application is submitted the application data can be queried by address.
+This will trigger the `event Request(address indexed applicant, bytes32 indexed request, uint256 hash);` event on the contract. After an application is submitted the application data can be queried by address.
 
 ```javascript
 > comm.index("0xe6b032b23bc145ed19e23792e2a107d0794fe65a");
@@ -119,6 +118,8 @@ Any pending Application can be rejected and will be removed from contract storag
 0
 ```
 
+This will trigger the `Reject(address indexed applicant);` event on the contract.
+
 ### Accepting Applications
 
 Once an application is accepted its address is removed from the pending applications. 
@@ -129,7 +130,9 @@ Once an application is accepted its address is removed from the pending applicat
 > comm.index("0xe6b032b23bc145ed19e23792e2a107d0794fe65a");
 0
 ```
-This function will be called by the Poll contract when this accounts casts a ballot to it.
+This will trigger the `Accept(address indexed applicant);` event on the contract.
+
+The function will be called by the Poll contract when this accounts casts a ballot to it.
 ```javascript
 > comm.isMember("0xe6b032b23bc145ed19e23792e2a107d0794fe65a");
 true
@@ -140,3 +143,4 @@ true
 > comm.remMember.sendTransaction("0xe6b032b23bc145ed19e23792e2a107d0794fe65a",{from:eth.accounts[0], gas: 150000});
 "0xab0593239bb538c0822c0289d47f991ed5183b20d25666e73fba7cffaf385c6d"
 ```
+This will trigger the `Remove(address indexed applicant);` event on the contract.
