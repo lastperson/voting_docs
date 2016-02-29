@@ -35,8 +35,8 @@ regContract.allEvents({fromBlock: fromBlock, toBlock: 'latest'}, function(err,op
   if (op.event === 'Poll') {
     console.log('found poll at address: ' + op.args.poll);
     //read name of poll
-    regContract.provIndex(addr, function(error, index) {
-      regContract.provNames(index, function(error, name) {
+    regContract.pollIndex(op.args.poll, function(error, index) {
+      regContract.pollNames(index, function(error, name) {
         console.log('poll at address: ' + op.args.poll + 'is named ' + name);
       });
     });
