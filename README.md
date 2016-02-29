@@ -59,3 +59,84 @@ pollContract.answersLength(function(error, count) {
   console.log('poll at address: ' + pollAddress + ' has ' + count + 'questions.');
 });
 ```
+
+#Managing Community from Geth Console
+
+## Binding to contract
+
+```javascript
+> var comm = web3.eth.contract([{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"members","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_newOwner","type":"address"}],"name":"setOwner","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"index","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"_member","type":"address"}],"name":"remMember","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"hashes","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"applicants","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"requests","outputs":[{"name":"","type":"bytes32"}],"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},{"constant":true,"inputs":[{"name":"_member","type":"address"}],"name":"isMember","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_applicant","type":"address"}],"name":"reject","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_applicant","type":"address"}],"name":"addMember","outputs":[{"name":"","type":"bool"}],"type":"function"},{"constant":false,"inputs":[{"name":"_applicant","type":"address"},{"name":"_request","type":"bytes32"},{"name":"_hash","type":"uint256"}],"name":"request","outputs":[{"name":"","type":"bool"}],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"applicant","type":"address"},{"indexed":true,"name":"request","type":"bytes32"},{"indexed":false,"name":"hash","type":"uint256"}],"name":"Request","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"applicant","type":"address"}],"name":"Reject","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"applicant","type":"address"}],"name":"Accept","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"applicant","type":"address"}],"name":"Remove","type":"event"}]).at("0xa92cff3d614fd9dca7e873eaa6bbdd818b3fad3e");
+undefined
+> > comm.address
+"0xa92cff3d614fd9dca7e873eaa6bbdd818b3fad3e"
+```
+
+## Setting Contract Owner
+
+The Owner is the admin of the contract. Only the current owner can appoint a new owner.  The owner is the only one who can approve and reject member applications.
+
+```javascript
+> comm.setOwner.sendTransaction("0x00da0847592774280c84b106dce8d54c39b5b5f6",{from:eth.accounts[0], gas: 120000});
+"0xb8a3f4b7a1537885f4bb1982c9b402901c675367a132df712baeca9bb2b9d2af"
+> comm.owner()
+"0x00da0847592774280c84b106dce8d54c39b5b5f6"
+```
+
+## Requesting Membership in Community
+
+This call is unrestricted. Everyone can submit an application to it. The application consists of the account address, a URI to a JSON object holding application data, and a SHA-hash of the content of the application. 
+
+```javascript
+> comm.request.sendTransaction("0xe6b032b23bc145ed19e23792e2a107d0794fe65a","http://some.url/application.json","0x123567",{from:eth.accounts[0], gas: 150000});
+"0x669b8c0dba902e7a727749278acc3e2c9c44b02af72885385745e26febd9188f"
+```
+
+After an application is submitted the application data can be queried by address.
+
+```javascript
+> comm.index("0xe6b032b23bc145ed19e23792e2a107d0794fe65a");
+1
+> comm.requests(1);
+"0x687474703a2f2f736f6d652e75726c2f6170706c69636174696f6e2e6a736f6e"
+> comm.applicants(1);
+"0xe6b032b23bc145ed19e23792e2a107d0794fe65a"
+> comm.hashes(1);
+1193319
+```
+
+## Managing Applications
+
+Pending applications can be approved or rejected. Once accepted, accounts become Members. The Poll conract will call the `isMember(addr)` function when a ballot is casted. Any rejected account can apply again. Member accounts can also be removed and apply again.
+
+### Rejecting Application
+
+Any pending Application can be rejected and will be removed from contract storage. Once rejected account can apply again.
+
+```javascript
+> comm.reject.sendTransaction("0xe6b032b23bc145ed19e23792e2a107d0794fe65a",{from:eth.accounts[0], gas: 150000});
+"0x6934bea5a2da7e44afbb0ad4f69ace60b38e0e45ca45e5d954024a28c19e0669"
+> comm.index("0xe6b032b23bc145ed19e23792e2a107d0794fe65a");
+0
+```
+
+### Accepting Applications
+
+Once an application is accepted its address is removed from the pending applications. 
+
+```javascript
+> comm.addMember.sendTransaction("0xe6b032b23bc145ed19e23792e2a107d0794fe65a",{from:eth.accounts[0], gas: 150000});
+"0xac859e43fea980e65e469b0dafeceb510d572b8e0b20f83ef18f272a2e74d04f"
+> comm.index("0xe6b032b23bc145ed19e23792e2a107d0794fe65a");
+0
+```
+This function will be called by the Poll contract when this accounts casts a ballot to it.
+```javascript
+> comm.isMember("0xe6b032b23bc145ed19e23792e2a107d0794fe65a");
+true
+```
+### Removing Members
+
+```javascript
+> comm.remMember.sendTransaction("0xe6b032b23bc145ed19e23792e2a107d0794fe65a",{from:eth.accounts[0], gas: 150000});
+"0xab0593239bb538c0822c0289d47f991ed5183b20d25666e73fba7cffaf385c6d"
+```
