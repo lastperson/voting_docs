@@ -190,7 +190,7 @@ var end; //end time until ballots can be cast
 var questionCount; //array of integer. length of array represents how many questions are in this poll. array cell determines how many different answers possible
 var communities; //address of communities that will be checked for ballot castor identity
 var questions; //json string of questions and answers
-var setConfigIba = '';
+var setConfigIba = '{"constant":false,"inputs":[{"name":"_start","type":"uint256"},{"name":"_end","type":"uint256"},{"name":"_answerCount","type":"uint8[]"},{"name":"_idVers","type":"address[]"},{"name":"_questions","type":"string"}],"name":"setParams","outputs":[{"name":"","type":"bool"}],"type":"function"}';
 var pollAddress = 'deployedPollAddress';
 var fun = new SolidityFunction(setConfigIba, pollAddress);
 var data = [start, end, questionCount, communities, questions];
