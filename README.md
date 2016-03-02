@@ -144,3 +144,26 @@ true
 "0xab0593239bb538c0822c0289d47f991ed5183b20d25666e73fba7cffaf385c6d"
 ```
 This will trigger the `Remove(address indexed applicant);` event on the contract.
+
+
+## Javascript functions
+
+waiting for a tx to be mined from web3:
+
+```javascript
+web3.eth.sendTransaction(tx, function(e, a) {
+  if (!e) {
+    var filter = web3.eth.filter('latest');
+    filter.watch(function (error, log) {
+      web3.eth.getTransactionReceipt(tx, function(e, receipt){
+        if (error || !receipt) {
+          console.log('waiting...'); 
+          return this;
+        }
+        filter.stopWatching();
+        console.log('tx '+ receipt.hash + 'mined'); 
+      });
+    });
+  }
+});
+```
