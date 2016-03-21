@@ -21,13 +21,12 @@ contract Poll {
     
     event Vote (address indexed voter, bytes32 indexed hash);
     
-    function Poll() {
-        organizer = tx.origin;
-        voters.length++;
-        ballots.length++;
-    }
-    
     function setParams(uint _start, uint _end, uint8[] _answerCount, address[] _idVers, string _questions) returns (bool) {
+        if (organizer == 0x0) {
+            organizer = tx.origin;
+            voters.length++;
+            ballots.length++;
+        }
         if (tx.origin != organizer || answerCount.length > 0) {
             return false;
         }
