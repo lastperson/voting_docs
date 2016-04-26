@@ -22,14 +22,12 @@ contract Poll {
     event Vote (address indexed voter, bytes32 indexed hash);
     
     function setParams(uint _start, uint _end, uint8[] _answerCount, address[] _idVers, string _questions) returns (bool) {
-        if (organizer == 0x0) {
-            organizer = tx.origin;
-            voters.length++;
-            ballots.length++;
-        }
-        if (tx.origin != organizer || answerCount.length > 0) {
+        if (organizer != 0x0) {
             return false;
         }
+        organizer = tx.origin;
+        voters.length++;
+        ballots.length++;
         questions = _questions;
         start = _start;
         end = _end;
@@ -60,9 +58,11 @@ contract Poll {
         return _castTimed(_ballot, now);
     }
 
+    // DEPLOY REMOVE START
     function castTimed(uint8[] _ballot, uint _now) onlyVerified returns (bytes32) {
         return _castTimed(_ballot, _now);
     }
+    // DEPLOY REMOVE END
 
     function _castTimed(uint8[] _ballot, uint _now) internal returns (bytes32) {
         if (start <= _now && _now <= end && _ballot.length == answerCount.length) {
@@ -85,12 +85,38 @@ contract Poll {
             return hash;
         }
     }
-    
-    function count() returns (bool) {
-        return countTimed(now);
+
+    function checkResults() constant returns(bytes32[]) {
+        uint length = 0;
+        for (uint i = 0; i < answerCount.length; i++) {
+            length += answerCount[i];
+        }
+        bytes32[] memory result = new bytes32[](length + answerCount.length);
+        uint pos = 0;
+        for (uint8 q = 0; q < uint8(answerCount.length); q++) {
+            result[pos] = bytes32(q);
+            for (uint ballot = 1; ballot < ballots.length; ballot++) {
+                uint8 answer = ballots[ballot][q];
+                if (answer > 0) {
+                    result[pos+answer] = bytes32(uint(result[pos+answer])+1);
+                }
+            }
+            pos += answerCount[q] + 1;
+        }
+        return result;
     }
     
+    function count() returns (bool) {
+        return _countTimed(now);
+    }
+
+    // DEPLOY REMOVE START
     function countTimed(uint _now) returns (bool) {
+        return _countTimed(_now);
+    }
+    // DEPLOY REMOVE END
+
+    function _countTimed(uint _now) internal returns (bool) {
         if (_now >= end && results.length == 0) {
             results.length = answerCount.length;
             for (uint8 q = uint8(answerCount.length); q > 0; q--) {
@@ -100,10 +126,8 @@ contract Poll {
                 }
                 answerCount.length--;
             }
-            organizer = 0x0;
             return true;
         }
         return false;
     }
-    
 }
